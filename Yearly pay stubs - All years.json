@@ -1,0 +1,116 @@
+{
+  "name": "Yearly pay stubs - All years",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "a1000001-0000-0000-0000-000000000001",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 50,
+        "filters": {
+          "includeSpamTrash": true,
+          "q": "from:@uncove.com subject:\"Bulletin de paie\""
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [220, 0],
+      "id": "a1000001-0000-0000-0000-000000000002",
+      "name": "Get all pay stub emails",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zH93ycfx8msPYsns",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [440, 0],
+      "id": "a1000001-0000-0000-0000-000000000003",
+      "name": "Download attachment",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zH93ycfx8msPYsns",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "id": "a1000001-0000-0000-0000-000000000004",
+      "name": "Extract PDF text"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst frenchMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];\nconst yearGroups = {};\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json.text ?? '';\n  const internalDate = item.json.internalDate;\n\n  let month = null;\n  let year = null;\n\n  // Primary: parse \"Salaire versé le : DD/MM/YY\" from PDF text\n  const salMatch = text.match(/Salaire vers[eé] le\\s*:\\s*(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/i);\n  if (salMatch) {\n    const monthNum = parseInt(salMatch[2]);\n    month = frenchMonthNames[monthNum - 1] ?? null;\n    const yr = salMatch[3];\n    year = yr.length === 2 ? '20' + yr : yr;\n  }\n\n  // Fallback: email internal date\n  if ((!month || !year) && internalDate) {\n    const d = new Date(parseInt(internalDate));\n    if (!year) year = d.getFullYear().toString();\n    if (!month) month = frenchMonthNames[d.getMonth()];\n  }\n\n  year = year || 'unknown';\n  const fileName = month ? `${month}_${year}.pdf` : `paystub_${i}.pdf`;\n\n  if (!yearGroups[year]) yearGroups[year] = {};\n\n  const bin = item.binary?.attachment_0;\n  if (bin) {\n    const idx = Object.keys(yearGroups[year]).length;\n    yearGroups[year][`pdf_${idx}`] = { ...bin, fileName };\n  }\n}\n\nreturn Object.entries(yearGroups).map(([year, binaryData]) => ({\n  json: { year },\n  binary: binaryData\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "id": "a1000001-0000-0000-0000-000000000005",
+      "name": "Group by year"
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "={{ Object.keys($binary).join(',') }}",
+        "fileName": "={{ `pay-stubs-${$json.year}` }}",
+        "binaryPropertyOutput": "zip"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [1100, 0],
+      "id": "a1000001-0000-0000-0000-000000000006",
+      "name": "Compression"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [[{ "node": "Get all pay stub emails", "type": "main", "index": 0 }]]
+    },
+    "Get all pay stub emails": {
+      "main": [[{ "node": "Download attachment", "type": "main", "index": 0 }]]
+    },
+    "Download attachment": {
+      "main": [[{ "node": "Extract PDF text", "type": "main", "index": 0 }]]
+    },
+    "Extract PDF text": {
+      "main": [[{ "node": "Group by year", "type": "main", "index": 0 }]]
+    },
+    "Group by year": {
+      "main": [[{ "node": "Compression", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
+  },
+  "tags": []
+}
