@@ -5,8 +5,11 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
-      "id": "351ce7b5-b2d1-439b-b449-bae69d443cf4",
+      "position": [
+        0,
+        0
+      ],
+      "id": "7f1d44ca-f55f-4cc2-aa08-21c111c79710",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -18,8 +21,11 @@
       },
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [832, 0],
-      "id": "d1d5ac65-95de-40dd-8892-a3567ae5a667",
+      "position": [
+        832,
+        0
+      ],
+      "id": "ed35188a-66b0-46be-aa0f-249424ba8c97",
       "name": "Compression"
     },
     {
@@ -34,8 +40,11 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [208, 0],
-      "id": "9b7358a9-f0c8-4029-95f6-ef0cb6f01802",
+      "position": [
+        208,
+        0
+      ],
+      "id": "db2b7e95-e176-4ba3-9d2d-b59f6c0391ea",
       "name": "Get many messages",
       "webhookId": "fe6bc8cb-71ce-4a1c-ba4d-87b2a81f5041",
       "credentials": {
@@ -56,8 +65,11 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [416, 0],
-      "id": "e2e0c2d1-47d9-4eb7-970c-9c8ca340fa0b",
+      "position": [
+        416,
+        0
+      ],
+      "id": "2210343d-802f-4a42-80f7-df36b2c4f447",
       "name": "Get a message",
       "webhookId": "f4f00cd9-3663-4cd4-8fbe-32531eb3d191",
       "credentials": {
@@ -73,8 +85,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [624, 0],
-      "id": "1803bba1-a342-47ab-89d5-aac57bc99548",
+      "position": [
+        624,
+        0
+      ],
+      "id": "74e8a909-cac9-4010-837c-568b504b266b",
       "name": "Code in JavaScript"
     }
   ],
@@ -131,7 +146,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "5ca8beac-35af-4f8f-b0cf-906101eff87b",
+  "versionId": "48c673c8-b5f4-415e-8ae8-e58742d18c2b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
