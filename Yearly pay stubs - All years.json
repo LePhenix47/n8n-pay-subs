@@ -5,14 +5,16 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
-      "id": "a1000001-0000-0000-0000-000000000001",
+      "position": [
+        2976,
+        -1632
+      ],
+      "id": "e70543a1-4179-4504-b9cc-18d1a0c5527a",
       "name": "When clicking 'Execute workflow'"
     },
     {
       "parameters": {
         "operation": "getAll",
-        "limit": 50,
         "filters": {
           "includeSpamTrash": true,
           "q": "from:@uncove.com subject:\"Bulletin de paie\""
@@ -20,9 +22,13 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [220, 0],
-      "id": "a1000001-0000-0000-0000-000000000002",
+      "position": [
+        3200,
+        -1632
+      ],
+      "id": "533e5e7a-b4e3-490a-b88f-9751c513e581",
       "name": "Get all pay stub emails",
+      "webhookId": "2bc70dd5-74c9-445b-92d8-c7867f23ee2e",
       "credentials": {
         "gmailOAuth2": {
           "id": "zH93ycfx8msPYsns",
@@ -41,9 +47,13 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [440, 0],
-      "id": "a1000001-0000-0000-0000-000000000003",
+      "position": [
+        3424,
+        -1632
+      ],
+      "id": "a6a0493a-6149-4218-8983-978ae074d97f",
       "name": "Download attachment",
+      "webhookId": "0edb2a0e-81f8-457f-81c5-2bb7200b2e6c",
       "credentials": {
         "gmailOAuth2": {
           "id": "zH93ycfx8msPYsns",
@@ -59,8 +69,11 @@
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [660, 0],
-      "id": "a1000001-0000-0000-0000-000000000004",
+      "position": [
+        3856,
+        -1632
+      ],
+      "id": "0a47c33b-bf8b-4ea3-9c4d-ece06a507e5b",
       "name": "Extract PDF text"
     },
     {
@@ -69,8 +82,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, 0],
-      "id": "a1000001-0000-0000-0000-000000000005",
+      "position": [
+        4064,
+        -1632
+      ],
+      "id": "b6c6d1a9-5b53-40f0-8976-290a44d70ec9",
       "name": "Group by year"
     },
     {
@@ -82,35 +98,106 @@
       },
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [1100, 0],
-      "id": "a1000001-0000-0000-0000-000000000006",
+      "position": [
+        4288,
+        -1632
+      ],
+      "id": "3438a841-f1e1-4f14-b595-dd832d3df351",
       "name": "Compression"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  try {\n    const buf = await this.helpers.getBinaryDataBuffer(items[i], 'attachment_0');\n    const header = buf.slice(0, 20).toString('latin1');\n    const tail = buf.slice(-50).toString('latin1');\n    results.push({ index: i, size: buf.length, header, tail });\n  } catch (e) {\n    results.push({ index: i, size: 0, error: e.message });\n  }\n}\n\nreturn [{ json: { results } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3632,
+        -1632
+      ],
+      "id": "a8681a6d-aee8-4950-9132-f712fa3bb102",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
   "connections": {
     "When clicking 'Execute workflow'": {
-      "main": [[{ "node": "Get all pay stub emails", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Get all pay stub emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Get all pay stub emails": {
-      "main": [[{ "node": "Download attachment", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Download attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Download attachment": {
-      "main": [[{ "node": "Extract PDF text", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Extract PDF text": {
-      "main": [[{ "node": "Group by year", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Group by year",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Group by year": {
-      "main": [[{ "node": "Compression", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
+  "versionId": "102c0fd4-22b4-4cc7-8f17-ee63a209e227",
   "meta": {
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
   },
+  "id": "vanIGACFjneNgnbv",
   "tags": []
 }
