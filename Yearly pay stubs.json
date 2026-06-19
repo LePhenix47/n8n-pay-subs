@@ -15,9 +15,11 @@
     {
       "parameters": {
         "operation": "getAll",
+        "limit": 6,
         "filters": {
           "includeSpamTrash": false,
-          "q": "from:@uncove.com subject:\"Bulletin de paie\""
+          "q": "from:@uncove.com subject:\"Bulletin de paie\" ",
+          "receivedAfter": "2025-12-31T23:59:59"
         }
       },
       "type": "n8n-nodes-base.gmail",
@@ -35,6 +37,22 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "attachment_0",
+        "fileName": "pay-stubs",
+        "binaryPropertyOutput": "zip"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d1d5ac65-95de-40dd-8892-a3567ae5a667",
+      "name": "Compression"
     }
   ],
   "pinData": {},
@@ -49,6 +67,17 @@
           }
         ]
       ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -57,7 +86,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "310fada7-7884-4d13-be30-508b1d1e77e5",
+  "versionId": "c91cae4b-cb65-496b-a731-fda555888f4f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
