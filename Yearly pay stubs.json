@@ -14,12 +14,28 @@
     },
     {
       "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "attachment_0",
+        "fileName": "pay-stubs",
+        "binaryPropertyOutput": "zip"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "d1d5ac65-95de-40dd-8892-a3567ae5a667",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
         "operation": "getAll",
-        "limit": 6,
+        "limit": 12,
         "filters": {
-          "includeSpamTrash": false,
-          "q": "from:@uncove.com subject:\"Bulletin de paie\" ",
-          "receivedAfter": "2025-12-31T23:59:59"
+          "includeSpamTrash": true,
+          "q": "from:@uncove.com subject:\"Bulletin de paie\"",
+          "receivedAfter": "2025-11-30T23:59:59"
         }
       },
       "type": "n8n-nodes-base.gmail",
@@ -40,19 +56,24 @@
     },
     {
       "parameters": {
-        "operation": "compress",
-        "binaryPropertyName": "attachment_0",
-        "fileName": "pay-stubs",
-        "binaryPropertyOutput": "zip"
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
       },
-      "type": "n8n-nodes-base.compression",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
       "position": [
         416,
         0
       ],
-      "id": "d1d5ac65-95de-40dd-8892-a3567ae5a667",
-      "name": "Compression"
+      "id": "e2e0c2d1-47d9-4eb7-970c-9c8ca340fa0b",
+      "name": "Get a message",
+      "webhookId": "f4f00cd9-3663-4cd4-8fbe-32531eb3d191",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zH93ycfx8msPYsns",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -72,6 +93,17 @@
       "main": [
         [
           {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
             "node": "Compression",
             "type": "main",
             "index": 0
@@ -86,7 +118,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "c91cae4b-cb65-496b-a731-fda555888f4f",
+  "versionId": "36a692b5-2fa9-4acf-81c2-874ca22ce6d0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
