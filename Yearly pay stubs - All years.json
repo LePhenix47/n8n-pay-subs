@@ -5,10 +5,7 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [
-        2976,
-        -1632
-      ],
+      "position": [0, 0],
       "id": "e70543a1-4179-4504-b9cc-18d1a0c5527a",
       "name": "When clicking 'Execute workflow'"
     },
@@ -22,10 +19,7 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [
-        3200,
-        -1632
-      ],
+      "position": [220, 0],
       "id": "533e5e7a-b4e3-490a-b88f-9751c513e581",
       "name": "Get all pay stub emails",
       "webhookId": "2bc70dd5-74c9-445b-92d8-c7867f23ee2e",
@@ -47,10 +41,7 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [
-        3424,
-        -1632
-      ],
+      "position": [440, 0],
       "id": "a6a0493a-6149-4218-8983-978ae074d97f",
       "name": "Download attachment",
       "webhookId": "0edb2a0e-81f8-457f-81c5-2bb7200b2e6c",
@@ -63,29 +54,45 @@
     },
     {
       "parameters": {
+        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  let pdfKey = null;\n  for (const key of Object.keys(item.binary ?? {})) {\n    if (item.binary[key].mimeType === 'application/pdf') {\n      pdfKey = key;\n      break;\n    }\n  }\n\n  if (!pdfKey) continue;\n\n  result.push({ json: item.json, binary: { attachment_0: item.binary[pdfKey] } });\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "id": "a8681a6d-aee8-4950-9132-f712fa3bb102",
+      "name": "Normalize PDF attachment"
+    },
+    {
+      "parameters": {
         "operation": "pdf",
         "binaryPropertyName": "attachment_0",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [
-        3856,
-        -1632
-      ],
+      "position": [880, -80],
       "id": "0a47c33b-bf8b-4ea3-9c4d-ece06a507e5b",
-      "name": "Extract PDF text"
+      "name": "Extract PDF text",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst frenchMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];\nconst yearGroups = {};\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json.text ?? '';\n  const internalDate = item.json.internalDate;\n\n  let month = null;\n  let year = null;\n\n  // Primary: parse \"Salaire versé le : DD/MM/YY\" from PDF text\n  const salMatch = text.match(/Salaire vers[eé] le\\s*:\\s*(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/i);\n  if (salMatch) {\n    const monthNum = parseInt(salMatch[2]);\n    month = frenchMonthNames[monthNum - 1] ?? null;\n    const yr = salMatch[3];\n    year = yr.length === 2 ? '20' + yr : yr;\n  }\n\n  // Fallback: email internal date\n  if ((!month || !year) && internalDate) {\n    const d = new Date(parseInt(internalDate));\n    if (!year) year = d.getFullYear().toString();\n    if (!month) month = frenchMonthNames[d.getMonth()];\n  }\n\n  year = year || 'unknown';\n  const fileName = month ? `${month}_${year}.pdf` : `paystub_${i}.pdf`;\n\n  if (!yearGroups[year]) yearGroups[year] = {};\n\n  const bin = item.binary?.attachment_0;\n  if (bin) {\n    const idx = Object.keys(yearGroups[year]).length;\n    yearGroups[year][`pdf_${idx}`] = { ...bin, fileName };\n  }\n}\n\nreturn Object.entries(yearGroups).map(([year, binaryData]) => ({\n  json: { year },\n  binary: binaryData\n}));\n"
+        "mode": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1100, 0],
+      "id": "c1d2e3f4-a5b6-7890-cdef-123456789012",
+      "name": "Merge text + binary"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst frenchMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];\nconst yearGroups = {};\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json.text ?? '';\n  const attachmentFileName = item.binary?.attachment_0?.fileName ?? '';\n\n  let month = null;\n  let year = null;\n\n  // 1. PDF text: \"Salaire versé le : DD/MM/YY\"\n  const salMatch = text.match(/Salaire vers[eé] le\\s*:\\s*(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/i);\n  if (salMatch) {\n    const monthNum = parseInt(salMatch[2]);\n    month = frenchMonthNames[monthNum - 1] ?? null;\n    const yr = salMatch[3];\n    year = yr.length === 2 ? '20' + yr : yr;\n  }\n\n  // 2. Filename: _MMYYYY pattern (e.g. _092025)\n  if (!month || !year) {\n    const fnMatch = attachmentFileName.match(/_(\\d{2})(\\d{4})\\.pdf$/i);\n    if (fnMatch) {\n      const monthNum = parseInt(fnMatch[1]);\n      if (monthNum >= 1 && monthNum <= 12) {\n        month = frenchMonthNames[monthNum - 1];\n        year = fnMatch[2];\n      }\n    }\n  }\n\n  year = year || 'unknown';\n  const fileName = month ? `${month}_${year}.pdf` : `unknown_${i}.pdf`;\n\n  if (!yearGroups[year]) yearGroups[year] = {};\n\n  const bin = item.binary?.attachment_0;\n  if (bin) {\n    const idx = Object.keys(yearGroups[year]).length;\n    yearGroups[year][`pdf_${idx}`] = { ...bin, fileName };\n  }\n}\n\nreturn Object.entries(yearGroups).map(([year, binaryData]) => ({\n  json: { year },\n  binary: binaryData\n}));\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4064,
-        -1632
-      ],
+      "position": [1320, 0],
       "id": "b6c6d1a9-5b53-40f0-8976-290a44d70ec9",
       "name": "Group by year"
     },
@@ -98,94 +105,38 @@
       },
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [
-        4288,
-        -1632
-      ],
+      "position": [1540, 0],
       "id": "3438a841-f1e1-4f14-b595-dd832d3df351",
       "name": "Compression"
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  try {\n    const buf = await this.helpers.getBinaryDataBuffer(items[i], 'attachment_0');\n    const header = buf.slice(0, 20).toString('latin1');\n    const tail = buf.slice(-50).toString('latin1');\n    results.push({ index: i, size: buf.length, header, tail });\n  } catch (e) {\n    results.push({ index: i, size: 0, error: e.message });\n  }\n}\n\nreturn [{ json: { results } }];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3632,
-        -1632
-      ],
-      "id": "a8681a6d-aee8-4950-9132-f712fa3bb102",
-      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
   "connections": {
     "When clicking 'Execute workflow'": {
-      "main": [
-        [
-          {
-            "node": "Get all pay stub emails",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Get all pay stub emails", "type": "main", "index": 0 }]]
     },
     "Get all pay stub emails": {
-      "main": [
-        [
-          {
-            "node": "Download attachment",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Download attachment", "type": "main", "index": 0 }]]
     },
     "Download attachment": {
+      "main": [[{ "node": "Normalize PDF attachment", "type": "main", "index": 0 }]]
+    },
+    "Normalize PDF attachment": {
       "main": [
         [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Extract PDF text", "type": "main", "index": 0 },
+          { "node": "Merge text + binary", "type": "main", "index": 1 }
         ]
       ]
     },
     "Extract PDF text": {
-      "main": [
-        [
-          {
-            "node": "Group by year",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Merge text + binary", "type": "main", "index": 0 }]]
+    },
+    "Merge text + binary": {
+      "main": [[{ "node": "Group by year", "type": "main", "index": 0 }]]
     },
     "Group by year": {
-      "main": [
-        [
-          {
-            "node": "Compression",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Extract PDF text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Compression", "type": "main", "index": 0 }]]
     }
   },
   "active": false,
@@ -194,7 +145,6 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "102c0fd4-22b4-4cc7-8f17-ee63a209e227",
   "meta": {
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
   },
