@@ -5,26 +5,20 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ],
+      "position": [0, 0],
       "id": "351ce7b5-b2d1-439b-b449-bae69d443cf4",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
         "operation": "compress",
-        "binaryPropertyName": "=={{ Object.keys($binary).join(',') }}",
+        "binaryPropertyName": "={{ Object.keys($binary).join(',') }}",
         "fileName": "pay-stubs",
         "binaryPropertyOutput": "zip"
       },
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [
-        832,
-        0
-      ],
+      "position": [832, 0],
       "id": "d1d5ac65-95de-40dd-8892-a3567ae5a667",
       "name": "Compression"
     },
@@ -40,10 +34,7 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [
-        208,
-        0
-      ],
+      "position": [208, 0],
       "id": "9b7358a9-f0c8-4029-95f6-ef0cb6f01802",
       "name": "Get many messages",
       "webhookId": "fe6bc8cb-71ce-4a1c-ba4d-87b2a81f5041",
@@ -65,10 +56,7 @@
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
-      "position": [
-        416,
-        0
-      ],
+      "position": [416, 0],
       "id": "e2e0c2d1-47d9-4eb7-970c-9c8ca340fa0b",
       "name": "Get a message",
       "webhookId": "f4f00cd9-3663-4cd4-8fbe-32531eb3d191",
@@ -85,10 +73,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        624,
-        0
-      ],
+      "position": [624, 0],
       "id": "1803bba1-a342-47ab-89d5-aac57bc99548",
       "name": "Code in JavaScript"
     }
