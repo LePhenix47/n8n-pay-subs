@@ -1,0 +1,67 @@
+{
+  "name": "Yearly pay stubs",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "351ce7b5-b2d1-439b-b449-bae69d443cf4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {
+          "includeSpamTrash": false,
+          "q": "from:@uncove.com subject:\"Bulletin de paie\""
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9b7358a9-f0c8-4029-95f6-ef0cb6f01802",
+      "name": "Get many messages",
+      "webhookId": "fe6bc8cb-71ce-4a1c-ba4d-87b2a81f5041",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zH93ycfx8msPYsns",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "310fada7-7884-4d13-be30-508b1d1e77e5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
+  },
+  "id": "hTskRNQS7kKPwkBV",
+  "tags": []
+}
