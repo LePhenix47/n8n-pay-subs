@@ -15,7 +15,7 @@
     {
       "parameters": {
         "operation": "compress",
-        "binaryPropertyName": "attachment_0",
+        "binaryPropertyName": "=={{ Object.keys($binary).join(',') }}",
         "fileName": "pay-stubs",
         "binaryPropertyOutput": "zip"
       },
@@ -81,17 +81,16 @@
     },
     {
       "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
+        "jsCode": "const items = $input.all();\nconst binaryData = {};\n\nfor (let i = 0; i < items.length; i++) {\n  const subject = items[i].json.subject ?? items[i].json.Subject ?? '';\n  const parts = subject.trim().split(/\\s+/);\n  // \"Bulletin de Paie Mai 2026\" → \"Mai_2026\"\n  const label = parts.length >= 2\n    ? `${parts[parts.length - 2]}_${parts[parts.length - 1]}`\n    : `paystub_${i}`;\n\n  const bin = items[i].binary?.attachment_0;\n  if (bin) {\n    binaryData[`pdf_${i}`] = { ...bin, fileName: `${label}.pdf` };\n  }\n}\n\nreturn [{ json: {}, binary: binaryData }];\n"
       },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         624,
         0
       ],
-      "id": "d6fe0171-b51f-4c17-bda5-c05464039ceb",
-      "name": "Aggregate"
+      "id": "1803bba1-a342-47ab-89d5-aac57bc99548",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
@@ -122,14 +121,14 @@
       "main": [
         [
           {
-            "node": "Aggregate",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Aggregate": {
+    "Code in JavaScript": {
       "main": [
         [
           {
@@ -147,7 +146,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "bd857d42-60aa-4a70-8ea1-02e9c43c1dc5",
+  "versionId": "5ca8beac-35af-4f8f-b0cf-906101eff87b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
