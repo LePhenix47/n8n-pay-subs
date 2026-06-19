@@ -57,7 +57,11 @@
     {
       "parameters": {
         "operation": "get",
-        "messageId": "={{ $json.id }}"
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
@@ -118,7 +122,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "36a692b5-2fa9-4acf-81c2-874ca22ce6d0",
+  "versionId": "6aeabf29-6e46-449c-8008-9f7c2de9a73e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3da45d935305363c69b0b58031db83a74859b55142b9080d4cb236f6969874a3"
