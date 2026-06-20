@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  let pdfKey = null;\n  for (const key of Object.keys(item.binary ?? {})) {\n    if (item.binary[key].mimeType === 'application/pdf') {\n      pdfKey = key;\n      break;\n    }\n  }\n\n  if (!pdfKey) continue;\n\n  result.push({ json: item.json, binary: { attachment_0: item.binary[pdfKey] } });\n}\n\nreturn result;\n"
+        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  let pdfKey = null;\n  for (const key of Object.keys(item.binary ?? {})) {\n    if (item.binary[key].mimeType === 'application/pdf') {\n      pdfKey = key;\n      break;\n    }\n  }\n  if (!pdfKey) continue;\n  result.push({ json: item.json, binary: { attachment_0: item.binary[pdfKey] } });\n}\n\nreturn result;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -70,29 +70,18 @@
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [880, -80],
+      "position": [880, 0],
       "id": "0a47c33b-bf8b-4ea3-9c4d-ece06a507e5b",
       "name": "Extract PDF text",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "mode": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [1100, 0],
-      "id": "c1d2e3f4-a5b6-7890-cdef-123456789012",
-      "name": "Merge text + binary"
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst frenchMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];\nconst yearGroups = {};\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json.text ?? '';\n  const attachmentFileName = item.binary?.attachment_0?.fileName ?? '';\n\n  let month = null;\n  let year = null;\n\n  // 1. PDF text: \"Salaire versé le : DD/MM/YY\"\n  const salMatch = text.match(/Salaire vers[eé] le\\s*:\\s*(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/i);\n  if (salMatch) {\n    const monthNum = parseInt(salMatch[2]);\n    month = frenchMonthNames[monthNum - 1] ?? null;\n    const yr = salMatch[3];\n    year = yr.length === 2 ? '20' + yr : yr;\n  }\n\n  // 2. Filename: _MMYYYY pattern (e.g. _092025)\n  if (!month || !year) {\n    const fnMatch = attachmentFileName.match(/_(\\d{2})(\\d{4})\\.pdf$/i);\n    if (fnMatch) {\n      const monthNum = parseInt(fnMatch[1]);\n      if (monthNum >= 1 && monthNum <= 12) {\n        month = frenchMonthNames[monthNum - 1];\n        year = fnMatch[2];\n      }\n    }\n  }\n\n  year = year || 'unknown';\n  const fileName = month ? `${month}_${year}.pdf` : `unknown_${i}.pdf`;\n\n  if (!yearGroups[year]) yearGroups[year] = {};\n\n  const bin = item.binary?.attachment_0;\n  if (bin) {\n    const idx = Object.keys(yearGroups[year]).length;\n    yearGroups[year][`pdf_${idx}`] = { ...bin, fileName };\n  }\n}\n\nreturn Object.entries(yearGroups).map(([year, binaryData]) => ({\n  json: { year },\n  binary: binaryData\n}));\n"
+        "jsCode": "const frenchMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];\n\n// text items from Extract PDF text (binary stripped)\nconst textItems = $input.all();\n\n// binary items from before extraction (still have attachment_0)\nconst binaryItems = $('Normalize PDF attachment').all();\n\nconst yearGroups = {};\n\nfor (let i = 0; i < textItems.length; i++) {\n  const text = textItems[i].json.text ?? '';\n  const bin = binaryItems[i]?.binary?.attachment_0 ?? null;\n  const attachmentFileName = bin?.fileName ?? '';\n\n  let month = null;\n  let year = null;\n\n  // 1. PDF text: \"Salaire versé le : DD/MM/YY\"\n  const salMatch = text.match(/Salaire vers[eé] le\\s*:\\s*(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/i);\n  if (salMatch) {\n    const monthNum = parseInt(salMatch[2]);\n    month = frenchMonthNames[monthNum - 1] ?? null;\n    const yr = salMatch[3];\n    year = yr.length === 2 ? '20' + yr : yr;\n  }\n\n  // 2. Filename fallback: _MMYYYY\n  if (!month || !year) {\n    const fnMatch = attachmentFileName.match(/_(\\d{2})(\\d{4})\\.pdf$/i);\n    if (fnMatch) {\n      const monthNum = parseInt(fnMatch[1]);\n      if (monthNum >= 1 && monthNum <= 12) {\n        month = frenchMonthNames[monthNum - 1];\n        year = fnMatch[2];\n      }\n    }\n  }\n\n  year = year || 'unknown';\n  const fileName = month ? `${month}_${year}.pdf` : `unknown_${i}.pdf`;\n\n  if (!yearGroups[year]) yearGroups[year] = {};\n\n  if (bin) {\n    const idx = Object.keys(yearGroups[year]).length;\n    yearGroups[year][`pdf_${idx}`] = { ...bin, fileName };\n  }\n}\n\nreturn Object.entries(yearGroups).map(([year, binaryData]) => ({\n  json: { year },\n  binary: binaryData\n}));\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 0],
+      "position": [1100, 0],
       "id": "b6c6d1a9-5b53-40f0-8976-290a44d70ec9",
       "name": "Group by year"
     },
@@ -105,7 +94,7 @@
       },
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [1540, 0],
+      "position": [1320, 0],
       "id": "3438a841-f1e1-4f14-b595-dd832d3df351",
       "name": "Compression"
     }
@@ -122,17 +111,9 @@
       "main": [[{ "node": "Normalize PDF attachment", "type": "main", "index": 0 }]]
     },
     "Normalize PDF attachment": {
-      "main": [
-        [
-          { "node": "Extract PDF text", "type": "main", "index": 0 },
-          { "node": "Merge text + binary", "type": "main", "index": 1 }
-        ]
-      ]
+      "main": [[{ "node": "Extract PDF text", "type": "main", "index": 0 }]]
     },
     "Extract PDF text": {
-      "main": [[{ "node": "Merge text + binary", "type": "main", "index": 0 }]]
-    },
-    "Merge text + binary": {
       "main": [[{ "node": "Group by year", "type": "main", "index": 0 }]]
     },
     "Group by year": {
