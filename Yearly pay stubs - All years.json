@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  let pdfKey = null;\n  for (const key of Object.keys(item.binary ?? {})) {\n    if (item.binary[key].mimeType === 'application/pdf') {\n      pdfKey = key;\n      break;\n    }\n  }\n  if (!pdfKey) continue;\n  result.push({ json: item.json, binary: { attachment_0: item.binary[pdfKey] } });\n}\n\nreturn result;\n"
+        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  const pdfKeys = Object.keys(item.binary ?? {}).filter(\n    key => item.binary[key].mimeType === 'application/pdf'\n  );\n  for (const pdfKey of pdfKeys) {\n    result.push({ json: item.json, binary: { attachment_0: item.binary[pdfKey] } });\n  }\n}\n\nreturn result;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
